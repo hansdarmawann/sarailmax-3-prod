@@ -8,18 +8,18 @@
 # META   },
 # META   "dependencies": {
 # META     "lakehouse": {
-# META       "default_lakehouse": "954ffffe-e1b0-49e7-b6f7-fb165a0ade69",
-# META       "default_lakehouse_name": "sarimax_retail",
-# META       "default_lakehouse_workspace_id": "852736ac-796c-45be-81bc-0c3b1ab7666c",
+# META       "default_lakehouse": "449edcfe-7575-4069-928a-de39e762b407",
+# META       "default_lakehouse_name": "sarailmax_lh",
+# META       "default_lakehouse_workspace_id": "579d2ad1-3d06-4fbd-99b0-7ee633c6ced8",
 # META       "known_lakehouses": [
 # META         {
-# META           "id": "954ffffe-e1b0-49e7-b6f7-fb165a0ade69"
+# META           "id": "449edcfe-7575-4069-928a-de39e762b407"
 # META         }
 # META       ]
 # META     },
 # META     "environment": {
-# META       "environmentId": "ae090f3f-7ebe-4f3f-8870-9a5bfb023828",
-# META       "workspaceId": "852736ac-796c-45be-81bc-0c3b1ab7666c"
+# META       "environmentId": "2ad93746-3283-976f-4898-669746c81e96",
+# META       "workspaceId": "00000000-0000-0000-0000-000000000000"
 # META     }
 # META   }
 # META }
@@ -101,6 +101,10 @@ from sklearn.metrics import (
     mean_absolute_percentage_error
 )
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import re
+
 # Menonaktifkan pesan peringatan agar tampilan notebook lebih rapi dan fokus
 warnings.filterwarnings("ignore")
 
@@ -123,8 +127,12 @@ DATA_ROOT = "/lakehouse/default"
 DATA_FOLDER = "Files/salesforecast"  # Folder tujuan penyimpanan data
 DATA_FILE = "Superstore.xlsx"        # Nama file dataset yang akan diolah
 
-# --- Identitas Eksperimen ---
-EXPERIMENT_NAME = "aisample-superstore-forecast-2"  # Nama identitas proyek pada MLflow
+# --- Identitas Eksperimen dan Model ---
+# Menghasilkan timestamp berdasarkan waktu Indonesia Barat (WIB)
+TIMESTAMP = datetime.now(ZoneInfo("Asia/Jakarta")).strftime("%Y%m%d-%H%M%S")
+
+# Nama eksperimen dan model yang unik untuk setiap eksekusi
+EXPERIMENT_NAME = f"aisample-superstore-forecast-2-{TIMESTAMP}"
 
 # --- Parameter Waktu Peramalan ---
 # Menentukan periode pengujian model dan periode prediksi masa depan
@@ -995,10 +1003,12 @@ combined_df = pd.concat(
 
 spark_combined_df = spark.createDataFrame(combined_df)
 
+table_name = "sales_actual_forecast_" + re.sub(r"[^0-9A-Za-z_]", "_", TIMESTAMP)
+
 spark_combined_df.write \
     .mode("overwrite") \
     .option("overwriteSchema", "true") \
-    .saveAsTable("sales_actual_forecast")
+    .saveAsTable(table_name)
 
 # METADATA ********************
 
